@@ -1,14 +1,15 @@
 {
-  "name": "ia",
+  "name": "photo-editor-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "dotenv": "*",
-    "express": "*",
-    "form-data": "*",
-    "node-fetch": "*"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.6.9"
   }
 }
