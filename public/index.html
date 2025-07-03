@@ -2,60 +2,129 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Editor de Imagen</title>
+  <title>Editor de Imagen con IA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-gray-100 to-blue-200 min-h-screen flex items-center justify-center px-4">
-  <div class="max-w-xl w-full bg-white rounded-xl shadow-lg p-6">
-    <h1 class="text-2xl font-bold text-center mb-4 text-blue-700">Editor de Imagen con IA</h1>
+<body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen flex items-center justify-center px-4">
+
+  <div class="max-w-xl w-full bg-white bg-opacity-90 backdrop-blur-md rounded-2xl shadow-2xl p-8 transition-all duration-300">
+    <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">🎨 Editor de Imagen con IA</h1>
 
     <form id="editForm" class="space-y-4">
-      <input type="file" name="image" id="imageInput" accept="image/*" required class="w-full border p-2 rounded" />
-      <textarea name="instruction" id="instruction" rows="3" required class="w-full border p-2 rounded" placeholder="Ej: hazlo estilo anime, cambia colores..."></textarea>
-      <button type="submit" class="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">Procesar Imagen</button>
+      <!-- Campo de imagen con ícono -->
+      <div class="relative">
+        <label for="imageInput" class="block font-semibold text-sm mb-1 text-gray-700">Imagen</label>
+        <div class="flex items-center border border-gray-300 rounded-md p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16l4-4a3 3 0 014 0l4 4m-6-6h.01M5 20h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z"/>
+          </svg>
+          <input type="file" name="image" id="imageInput" accept="image/*" required class="w-full outline-none text-sm" />
+        </div>
+        <p id="imageStatus" class="text-sm text-green-600 mt-1 hidden fade-in">✅ Imagen seleccionada</p>
+      </div>
+
+      <!-- Campo de texto con ícono -->
+      <div class="relative">
+        <label for="instruction" class="block font-semibold text-sm mb-1 text-gray-700">Instrucción para la IA</label>
+        <div class="flex border border-gray-300 rounded-md p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 mr-2 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 16.5a2.5 2.5 0 00-2.5-2.5H5.5A2.5 2.5 0 003 16.5V17a2 2 0 002 2h14a2 2 0 002-2v-.5z" />
+          </svg>
+          <textarea name="instruction" id="instruction" rows="3" required
+            class="w-full outline-none text-sm resize-none"
+            placeholder="Ej: cambia el fondo, estilo anime, tonos cálidos..."></textarea>
+        </div>
+      </div>
+
+      <!-- Botón -->
+      <button type="submit"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md w-full font-semibold shadow-md transition transform hover:scale-105">
+        Procesar Imagen
+      </button>
     </form>
 
-    <div id="loading" class="hidden text-center my-4">
-      <div class="animate-spin rounded-full h-8 w-8 border-t-4 border-blue-500 mx-auto mb-2"></div>
-      <p class="text-blue-600">Procesando imagen...</p>
+    <!-- Barra de progreso -->
+    <div id="progressContainer" class="w-full mt-6 hidden">
+      <div class="h-2 bg-indigo-200 rounded">
+        <div id="progressBar" class="h-2 bg-indigo-600 rounded w-0 transition-all duration-1000 ease-in-out"></div>
+      </div>
+      <p class="text-center text-xs text-gray-600 mt-1">Procesando imagen...</p>
     </div>
 
-    <div id="result" class="mt-6 text-center space-y-4 text-sm text-gray-700"></div>
+    <!-- Resultado -->
+    <div id="result" class="mt-8 text-center text-gray-700 text-sm space-y-4 transition-all duration-500"></div>
   </div>
 
   <script>
     const form = document.getElementById('editForm');
     const resultDiv = document.getElementById('result');
-    const loading = document.getElementById('loading');
+    const imageInput = document.getElementById('imageInput');
+    const imageStatus = document.getElementById('imageStatus');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    // Mostrar mensaje de archivo seleccionado
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files.length > 0) {
+        imageStatus.classList.remove('hidden');
+      } else {
+        imageStatus.classList.add('hidden');
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      loading.classList.remove('hidden');
       resultDiv.innerHTML = '';
+      progressContainer.classList.remove('hidden');
+      progressBar.style.width = '0%';
 
       const formData = new FormData(form);
+
+      // Simular progreso (visual)
+      let progress = 0;
+      const simulate = setInterval(() => {
+        if (progress < 90) {
+          progress += 10;
+          progressBar.style.width = `${progress}%`;
+        }
+      }, 200);
+
       try {
         const res = await fetch('/api/process', {
           method: 'POST',
           body: formData
         });
         const data = await res.json();
-        loading.classList.add('hidden');
+        clearInterval(simulate);
+        progressBar.style.width = '100%';
 
         if (data.url) {
           resultDiv.innerHTML = `
-            <p class="text-gray-600">✅ Imagen procesada:</p>
-            <img src="${data.url}" class="mx-auto max-h-96 rounded shadow" />
-            <p class="text-gray-500 text-xs break-words">${data.url}</p>
+            <p class="text-indigo-700 font-medium fade-in">✅ Imagen procesada correctamente</p>
+            <img src="${data.url}" class="mx-auto max-h-[400px] rounded-lg shadow-xl fade-in border border-gray-200" alt="Imagen generada" />
           `;
         } else {
-          resultDiv.innerHTML = '<p class="text-red-600">❌ Error al procesar imagen.</p>';
+          resultDiv.innerHTML = '<p class="text-red-600 fade-in">❌ Error al procesar imagen.</p>';
         }
       } catch (err) {
-        loading.classList.add('hidden');
-        resultDiv.innerHTML = '<p class="text-red-600">❌ Error del servidor.</p>';
+        clearInterval(simulate);
+        resultDiv.innerHTML = '<p class="text-red-600 fade-in">❌ Error del servidor.</p>';
       }
+
+      setTimeout(() => {
+        progressContainer.classList.add('hidden');
+        progressBar.style.width = '0%';
+      }, 1500);
     });
   </script>
 </body>
