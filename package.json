@@ -1,15 +1,20 @@
 {
   "name": "photo-editor-backend",
   "version": "1.0.0",
+  "description": "Servidor backend para subir y procesar imágenes usando una API externa",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "form-data": "^4.0.0",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.6.9"
-  }
+  },
+  "keywords": [],
+  "author": "x",
+  "license": "MIT"
 }
