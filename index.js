@@ -1,19 +1,18 @@
-import express from 'express';
-import multer from 'multer';
-import fetch from 'node-fetch';
-import FormData from 'form-data';
-import path from 'path';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
+const express = require('express');
+const multer = require('multer');
+const fetch = require('node-fetch');
+const FormData = require('form-data');
+const path = require('path');
+const dotenv = require('dotenv');
+const fs = require('fs');
 
 dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 const PORT = process.env.PORT || 3000;
 
+// Servir frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint protegido
@@ -37,27 +36,27 @@ app.post('/api/process', upload.single('image'), async (req, res) => {
 
     const uploadData = await uploadResp.json();
     if (!uploadData[0]?.src) {
-      return res.status(500).json({ error: 'Fallo al subir imagen' });
+      return res.status(500).json({ error: 'Error al subir la imagen' });
     }
 
     const imageUrl = 'https://telegra.ph' + uploadData[0].src;
     const apiKey = process.env.API_KEY;
     const apiUrl = `https://api.neoxr.eu/api/photo-editor?image=${encodeURIComponent(imageUrl)}&q=${encodeURIComponent(instruction)}&apikey=${apiKey}`;
 
-    // 2. Procesar imagen con IA
+    // 2. Llamar a la API de edición
     const apiResp = await fetch(apiUrl);
     const apiData = await apiResp.json();
 
-    fs.unlink(file.path, () => {}); // borrar imagen temporal
+    fs.unlink(file.path, () => {}); // borrar archivo temporal
 
     if (!apiData.status || !apiData.data?.url) {
-      return res.status(500).json({ error: 'Fallo al procesar imagen' });
+      return res.status(500).json({ error: 'Fallo al procesar la imagen' });
     }
 
     res.json({ url: apiData.data.url });
 
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
